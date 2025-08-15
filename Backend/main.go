@@ -1,18 +1,38 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"net/http"
+	"os"
+
+	handlers "D:\\Dev_Projects\\MusicShop_git\\MusicShop\\Backend\\internal\\http"
+	repo "D:\\Dev_Projects\\MusicShop_git\\MusicShop\\Backend\\internal\\repository"
 )
 
-//TIP <p>To run your code, right-click the code and select <b>Run</b>.</p> <p>Alternatively, click
-// the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.</p>
-
 func main() {
-	s := "Boss"
-	fmt.Printf("Hello, %s!\n", s)
-
-	aliases := []string{"Mard", "Supervisor", "Eshghe Ashkan"}
-	for _, alias := range aliases {
-		fmt.Println(alias)
+	port := env("PORT", "8080")
+	dsn := env("DATABASE_URL", "")
+	if dsn == "" {
+		log.Fatal("DATABASE_URL is required")
 	}
+
+	r, err := repo.NewPostgresRepo(dsn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer r.Close()
+
+	mux := http.NewServeMux()
+	s := &handlers.Server{Repo: r}
+	s.Routes(mux) // or s.routes(mux) depending on export
+
+	log.Printf("listening on :%s", port)
+	log.Fatal(http.ListenAndServe(":"+port, mux))
+}
+
+func env(k, def string) string {
+	if v := os.Getenv(k); v != "" {
+		return v
+	}
+	return def
 }
