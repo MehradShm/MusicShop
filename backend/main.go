@@ -2,11 +2,10 @@ package main
 
 import (
 	"log"
+	handlers "musicshop/backend/internal/http"
+	repo "musicshop/backend/internal/repository"
 	"net/http"
 	"os"
-
-	handlers "D:\\Dev_Projects\\MusicShop_git\\MusicShop\\Backend\\internal\\http"
-	repo "D:\\Dev_Projects\\MusicShop_git\\MusicShop\\Backend\\internal\\repository"
 )
 
 func main() {

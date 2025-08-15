@@ -6,15 +6,14 @@ import (
 	"net/http"
 	"strconv"
 
-	repo "backend/internal/repository"
-	//repo "D:\\Dev_Projects\\MusicShop_git\\MusicShop\\Backend"
+	repo "musicshop/backend/internal/repository"
 )
 
 type Server struct {
 	Repo repo.UserRepository
 }
 
-func (s *Server) routes(mux *http.ServeMux) {
+func (s *Server) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("/users", s.handleUsers)
 	mux.HandleFunc("/users/", s.handleUserByID)
 }
