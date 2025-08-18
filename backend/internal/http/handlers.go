@@ -16,6 +16,15 @@ type Server struct {
 func (s *Server) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("/users", s.handleUsers)
 	mux.HandleFunc("/users/", s.handleUserByID)
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+
+	// Hello World endpoint
+	mux.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello, World!"))
+	})
 }
 
 func (s *Server) handleUsers(w http.ResponseWriter, r *http.Request) {
@@ -52,16 +61,26 @@ func (s *Server) handleUserByID(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		u, err := s.Repo.Get(r.Context(), id)
 		respondJSON(w, u, err)
+
 	case http.MethodPut:
 		var in struct{ Username, Name, Email string }
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 			http.Error(w, err.Error(), 400)
 			return
 		}
-		u := repo.User{Username: in.Username, Name: in.Name, Email: in.Email}
-		respondJSON(w, map[string]string{"status": "updated"}, s.Repo.Update(r.Context(), id, &u))
+		// Apply update
+		u := repo.User{ID: id, Username: in.Username, Name: in.Name, Email: in.Email}
+		if err := s.Repo.Update(r.Context(), id, &u); err != nil {
+			respondJSON(w, nil, err)
+			return
+		}
+		// Fetch and return the updated entity
+		updated, err := s.Repo.Get(r.Context(), id)
+		respondJSON(w, updated, err)
+
 	case http.MethodDelete:
 		respondJSON(w, map[string]string{"status": "deleted"}, s.Repo.Delete(r.Context(), id))
+
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
